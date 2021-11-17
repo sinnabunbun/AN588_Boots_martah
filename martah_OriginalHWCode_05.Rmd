@@ -1,0 +1,99 @@
+---
+title: "hw notes"
+author: "Marta"
+date: "11/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+_Bootstrapping Standard Errors and CIs for Linear Models._
+_When we initially discussed the central limit theorem and confidence intervals, we showed how we could use bootstrapping to estimate standard errors and confidence intervals around certain parameter values, like the mean. Using bootstrapping, we could also do the same for estimating standard errors and CIs around regression parameters, such as β coefficients._
+
+I'm not sure what packages I need going in to this so I'm just going to have a running library chunk
+
+```{r library}
+library(curl)
+library(sciplot)#i didn't feel like writing out se so here's that pacakge as well
+```
+
+_[1] Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(HomeRange_km2) in relation to log(Body_mass_female_mean) and report your β coeffiecients (slope and intercept)._
+
+```{r data}
+monkeys <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/KamilarAndCooperData.csv")
+monkeys <- read.csv(monkeys, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+monkeys<- na.omit(monkeys) #forget i have to remove na's for regression
+head(monkeys)
+```
+
+OK, then i wanna use the lm() function to run linear regression and get beta values
+
+```{r lm}
+regression<- lm(log(monkeys$HomeRange_km2) ~ log(monkeys$Body_mass_female_mean))
+summary(regression)
+```
+The Beta coefficiens  would be the estimates from the summary which I'm not sure how to call so I'm just going to write them out
+Slope: 1.0868
+Intercept:-9.7502
+
+_[2] Then, use bootstrapping to sample from your data 1000 times with replacement, each time fitting the same model and calculating the same coefficients. This generates a sampling distribution for each β coefficient._
+
+I wanna use the beta coef. for parameters so i'm seting up emty holders for the values but i'm not sure what it's really asking me to sample?
+```{r boots}
+slope_sample <- NULL 
+intercept_sample <- NULL
+n <- 30 #this is from zoms hw idk if its right
+for (i in 1:1000) {
+  samples <- monkeys[sample(1:6, size = n, replace = TRUE), ] #i'm using some of the zombies info so n=30 but n isn't given in this? so i'm not sure what it should be instead?
+  sampleslm <- lm(log(HomeRange_km2) ~ log(Body_mass_female_mean), data = samples) #this is using the lm formula to calculate beta coefficients for each of those samples
+  
+#this is where my problem comes back to bite me, I know how to find the coefficients in the summary but idk how to call them which means i can't sort the coefficients of each sample into their group, I'm going to set.seed to keep this data and then try and figure out how to call coef.
+}
+```
+
+_Estimate the standard error for each of your β coefficients as the standard deviation of the sampling distribution from your bootstrap and determine the 95% CI for each of your β coefficients based on the appropriate quantiles from your sampling distribution._
+
+dang I know that i could just use the coef. but idk how to isolate themmmmm
+```{r sd}
+sd(slope_sample)
+sd(intercept_sample)
+```
+
+for the CIs I'm not sure how we would base it on the sampling data and not just the whole set?? I guess you could sub out the values for the sample?? That's exactly what you do lmao nvm, so once again idk how to make this work bc idk how to isolate the coef.
+```{r slope confidence} 
+#sperating the two coefficients
+s_lower <- mean(slope_sample) - qnorm(1 - 0.05/2) * se(slope_sample)
+s_upper <- mean(slope_sample) + qnorm(1 - 0.05/2) * se(slope_sample)
+ci_slope <- list(Lower = as.numeric(s_lower), Upper = as.numeric(s_upper))
+ci_slope
+```
+```{r intercept confidence}
+i_lower <- mean(intercept_sample) - qnorm(1 - 0.05/2) * se(intercept_sample)
+i_upper <- mean(intercept_sample) + qnorm(1 - 0.05/2) * se(intercept_sample)
+ci_intercept <- list("Lower" = as.numeric(i_lower), "Upper" = as.numeric(i_upper))
+ci_intercept
+```
+
+
+_How does the former compare to the SE estimated from your entire dataset using the formula for standard error implemented in lm()?_
+```{r se}
+summary(regression)
+```
+Once I figure out coef. i will compare the se coef given in summary to se calculated using sciplot
+_How does the latter compare to the 95% CI estimated from your entire dataset?_
+
+Well a least for this I can use confint() to determine the CIs of the original data
+
+```{r ci for data}
+ci_data <- confint(regression, level = 0.95)
+ci_data
+```
+
+## Challenges 
+1. The biggest problem is I don't know how to isolate the coefficients from the summary which is frustaraing. If I have those I can isolate them in the sample data so I can actually use the holders for the later comparisons.
+2. CI for the smaples is confusing me because if its the average of the sample isn't it the same CIs as the data? Which I think might be the point but I can't compare rn.
+3. I'm not sure when we're asked for the linear regression if we're suppose to do it by hand or graph it bc right now I'm just looking at the summary of lm which gives me the info I need
+4. Idk what value to use for n in the sample size? The zombie homework problem used 30 but that was worded in the quesion so idk what's suppose to be here
+5. I want to attempt the EC but I'm not good at writing functions so this last challenge will be for if I try that (I did not)
