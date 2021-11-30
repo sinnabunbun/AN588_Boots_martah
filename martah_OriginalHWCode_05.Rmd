@@ -100,6 +100,8 @@ print(list(ci_data, ci_intercept, ci_slope))
 
 ```
 
+*Great work!*
+
 ## Challenges 
 1. The biggest problem is I don't know how to isolate the coefficients from the summary which is frustaraing. If I have those I can isolate them in the sample data so I can actually use the holders for the later comparisons.
 2. CI for the smaples is confusing me because if its the average of the sample isn't it the same CIs as the data? Which I think might be the point but I can't compare rn.
